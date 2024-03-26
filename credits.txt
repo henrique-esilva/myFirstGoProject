@@ -1,0 +1,7 @@
+This project make use of some resources made by other people. Very thanks to all. Take a look in their beautyfull job:
+
+asset pack:
+https://opengameart.org/content/a-platformer-in-the-forest
+by:
+Michele Bucelli
+https://opengameart.org/users/buch
