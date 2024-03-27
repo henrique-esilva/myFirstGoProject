@@ -1,36 +1,40 @@
 package main
 
 import (
-    "github.com/hajimehoshi/ebiten/v2"
-    "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-    "image"
+	"image"
 	"time"
-    "log"
+	"log"
 )
 
 const (
-    scale        = 3 // Fator de escala para a imagem
-    screenWidth  = 16*20*scale
-    screenHeight = 16*12*scale
+	scale        = 3 // Fator de escala para a imagem
+	screenWidth  = 16*20*scale
+	screenHeight = 16*12*scale
 )
 
 var (
 	logicTicker *time.Ticker
 	frameTicker *time.Ticker
 	animTicker *time.Ticker
-    charactersImage *ebiten.Image
+	charactersImage *ebiten.Image
 	tilesImage *ebiten.Image
-	grassTile *ebiten.Image
+	//grassTile *ebiten.Image
 	smiley Character
 	scout Character
 	king Character
 	snake Character
+	grassPack TilePack
 	characters[]*Character
-	grassTilemap [][]int
-	kingTilemap [][]int
-
+	//grassTilemap [][]int
 )
+
+type TilePack struct {
+	image *ebiten.Image
+	tilemap [][2]int
+}
 
 type Character struct {
 	sheet *ebiten.Image
@@ -105,21 +109,72 @@ func (g *Game) Update() error {
 	return nil
 }
 
+/*
+func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		scout.position[1]--
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		scout.position[1]++
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		scout.invert = -1
+		scout.position[0]--
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		scout.invert = 1
+		scout.position[0]++
+	}
+
+	select{
+	case<-logicTicker.C:
+		select{
+		case <-animTicker.C:
+			for _, currentCharacter := range characters{
+				currentCharacter.index++
+			}
+		default:
+		}
+
+		for _, currentCharacter := range characters {
+			if currentCharacter.position[0] < 0{currentCharacter.position[0] = 0}
+			if currentCharacter.position[0] > 19*16{currentCharacter.position[0] = 19*16}
+			if currentCharacter.position[1] < 1*16{currentCharacter.position[1] = 1*16}
+			if currentCharacter.position[1] > 11*16{currentCharacter.position[1] = 11*16}
+			if currentCharacter.index > currentCharacter.indexRange[1]{
+				currentCharacter.index = currentCharacter.indexRange[0]
+			}
+		}
+
+		var x0, y0 int
+		x0, y0 = scout.index*32, 0
+		rect := image.Rect(x0, y0, x0+32, y0+32)
+		scout.image = ebiten.NewImageFromImage(scout.sheet.SubImage(rect))
+
+		x0, y0 = smiley.index*32, 0
+		rect = image.Rect(x0, y0, x0+32, y0+32)
+		smiley.image = ebiten.NewImageFromImage(smiley.sheet.SubImage(rect))
+
+		x0, y0 = king.index*32, 0
+		rect = image.Rect(x0, y0, x0+32, y0+32)
+		king.image = ebiten.NewImageFromImage(king.sheet.SubImage(rect))
+
+		x0, y0 = snake.index*32, 0
+		rect = image.Rect(x0, y0, x0+32, y0+32)
+		snake.image = ebiten.NewImageFromImage(snake.sheet.SubImage(rect))
+	default:
+	}
+	return nil
+}*/
+
 func (g *Game) Draw(screen *ebiten.Image) {
     // Desenha a imagem completa na tela
     
-	for _, pos := range grassTilemap {
+	for _, pos := range grassPack.tilemap {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
 		op.GeoM.Scale(scale, scale)
-		screen.DrawImage(grassTile, op)
-	}
-
-	for _, pos := range kingTilemap {
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(pos[0]*16-8), float64(pos[1]*16-16))
-		op.GeoM.Scale(scale, scale)
-		screen.DrawImage(smiley.image, op)
+		screen.DrawImage(grassPack.image, op)
 	}
 
 	for _, currentCharacter := range characters {
@@ -131,35 +186,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		options.GeoM.Scale(scale, scale)
 		screen.DrawImage(currentCharacter.image, options)
 	}
-
-	/*
-	options := &ebiten.DrawImageOptions{}
-
-	x, y := float64(scout.position[0]*16)-8, float64(scout.position[1]*16-16)
-	options.GeoM.Scale(float64(scout.invert), 1)
-	if scout.invert == -1{options.GeoM.Translate(32, 0)}
-	options.GeoM.Translate(x, y)
-	options.GeoM.Scale(scale, scale)
-	screen.DrawImage(scout.image, options)
-
-	options = &ebiten.DrawImageOptions{}
-
-	x, y = float64(king.position[0]*16)-8, float64(king.position[1]*16-16)
-	options.GeoM.Scale(float64(king.invert), 1)
-	if king.invert == -1{options.GeoM.Translate(32, 0)}
-	options.GeoM.Translate(x, y)
-	options.GeoM.Scale(scale, scale)
-	screen.DrawImage(king.image, options)
-
-	options = &ebiten.DrawImageOptions{}
-
-	x, y = float64(snake.position[0]*16-8), float64(snake.position[1]*16-16)
-	options.GeoM.Scale(float64(snake.invert), 1)
-	if snake.invert == -1{options.GeoM.Translate(32, 0)}
-	options.GeoM.Translate(x, y)
-	options.GeoM.Scale(scale, scale)
-	screen.DrawImage(snake.image, options)
-	*/
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -209,7 +235,6 @@ func main() {
 		&king,
 		&snake,
 	}
-	kingTilemap = [][]int{{0,5},{1,5},{2,5}}
 
 	var err error
 	// Carrega o spritesheet dos personagens
@@ -236,8 +261,16 @@ func main() {
 
 	tilesImage, _, err = ebitenutil.NewImageFromFile("../../assets/image/sheet.png")
 	rect = image.Rect(16*8, 0, 16*9, 16)
-	grassTile = ebiten.NewImageFromImage(tilesImage.SubImage(rect))
-	grassTilemap = [][]int{{0,10},{1,10},{2,10},{3,10},{4,10}}
+	//grassTile = ebiten.NewImageFromImage(tilesImage.SubImage(rect))
+	//grassTilemap = [][]int{{0,11},{1,11},{2,11},{3,11},{4,11}}
+
+	grassPack = TilePack{
+		image: ebiten.NewImageFromImage(
+			tilesImage.SubImage(image.Rect(16*8, 0, 16*9, 16))),
+		tilemap: [][2]int{
+			{0,11},{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},
+		},
+	}
 
 	logicTicker = time.NewTicker(time.Second/60)
 	defer logicTicker.Stop()
