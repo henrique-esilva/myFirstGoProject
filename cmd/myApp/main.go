@@ -27,7 +27,9 @@ var (
 	king Character
 	snake Character
 	grassPack TilePack
-	characters[]*Character
+	dirtPack TilePack
+	tiles [] *TilePack
+	characters[] *Character
 	//grassTilemap [][]int
 )
 
@@ -169,12 +171,13 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
     // Desenha a imagem completa na tela
-    
-	for _, pos := range grassPack.tilemap {
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
-		op.GeoM.Scale(scale, scale)
-		screen.DrawImage(grassPack.image, op)
+	for _, i := range tiles{
+		for _, pos := range i.tilemap {
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
+			op.GeoM.Scale(scale, scale)
+			screen.DrawImage(i.image, op)
+		}
 	}
 
 	for _, currentCharacter := range characters {
@@ -261,16 +264,23 @@ func main() {
 
 	tilesImage, _, err = ebitenutil.NewImageFromFile("../../assets/image/sheet.png")
 	rect = image.Rect(16*8, 0, 16*9, 16)
-	//grassTile = ebiten.NewImageFromImage(tilesImage.SubImage(rect))
-	//grassTilemap = [][]int{{0,11},{1,11},{2,11},{3,11},{4,11}}
 
 	grassPack = TilePack{
 		image: ebiten.NewImageFromImage(
 			tilesImage.SubImage(image.Rect(16*8, 0, 16*9, 16))),
 		tilemap: [][2]int{
+			{0,10},{1,10},{2,10},{3,10},{4,10},{5,10},{6,10},{7,10},{8,10},{9,10},{10,10},
+		},
+	}
+	dirtPack = TilePack{
+		image: ebiten.NewImageFromImage(
+			tilesImage.SubImage(image.Rect(16*7, 16, 16*8, 16*2))),
+		tilemap: [][2]int{
 			{0,11},{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},
 		},
 	}
+
+	tiles = []*TilePack{&grassPack, &dirtPack}
 
 	logicTicker = time.NewTicker(time.Second/60)
 	defer logicTicker.Stop()
