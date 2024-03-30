@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	scale        = 3 // Fator de escala para a imagem
+	scale        = 2 // Fator de escala para a imagem
 	screenWidth  = 16*20*scale
 	screenHeight = 16*12*scale
 )
@@ -26,11 +26,9 @@ var (
 	scout Character
 	king Character
 	snake Character
-	grassPack TilePack
-	dirtPack TilePack
-	tiles [] *TilePack
+	tiles [10][7] TilePack
+	//tilesFrame [10][7] *TilePack
 	characters[] *Character
-	//grassTilemap [][]int
 )
 
 type TilePack struct {
@@ -171,14 +169,14 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
     // Desenha a imagem completa na tela
-	for _, i := range tiles{
+	for _, j := range tiles{for _, i := range j{
 		for _, pos := range i.tilemap {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
 			op.GeoM.Scale(scale, scale)
 			screen.DrawImage(i.image, op)
 		}
-	}
+	}}
 
 	for _, currentCharacter := range characters {
 		options := &ebiten.DrawImageOptions{}
@@ -198,6 +196,13 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
     s := ebiten.DeviceScaleFactor()
     return int(float64(outsideWidth) * s), int(float64(outsideHeight) * s) // Will result in 300x300 with 125% UI scaling.
+}
+
+func resumeRect (x, y int) image.Rectangle {
+	x, y = 16*(7+x), 16*(y)
+	a := x+16
+	b := y+16
+	return image.Rect(x, y, a, b)
 }
 
 func main() {
@@ -265,22 +270,57 @@ func main() {
 	tilesImage, _, err = ebitenutil.NewImageFromFile("../../assets/image/sheet.png")
 	rect = image.Rect(16*8, 0, 16*9, 16)
 
-	grassPack = TilePack{
-		image: ebiten.NewImageFromImage(
-			tilesImage.SubImage(image.Rect(16*8, 0, 16*9, 16))),
-		tilemap: [][2]int{
-			{0,10},{1,10},{2,10},{3,10},{4,10},{5,10},{6,10},{7,10},{8,10},{9,10},{10,10},
-		},
+	tiles = [10][7]TilePack{}
+
+	for x:=0; x<10; x++{
+		for y:=0; y<7; y++{
+			tiles[x][y] = TilePack{
+				image:ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y))),
+			}
+		}
 	}
-	dirtPack = TilePack{
-		image: ebiten.NewImageFromImage(
-			tilesImage.SubImage(image.Rect(16*7, 16, 16*8, 16*2))),
-		tilemap: [][2]int{
-			{0,11},{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},
+
+	tiles[4][1].tilemap = [][2]int{{1,11},{2,11},{3,11},{4,11}}
+	tiles[0][0].tilemap = [][2]int{{2,10}}
+	tiles[1][0].tilemap = [][2]int{{3,10},{4,10},{5,10}}
+	tiles[3][0].tilemap = [][2]int{{0,10},{4,8}}
+	tiles[4][0].tilemap = [][2]int{{1,10},{7,10}}
+	tiles[2][0].tilemap = [][2]int{{6,10}}
+	tiles[3][1].tilemap = [][2]int{{4,9},{0,11}}
+
+	/*	TilePack{
+			image: ebiten.NewImageFromImage(
+				tilesImage.SubImage(resumeRect(1, 0))),
+			tilemap: [][2]int{
+				{1,10},{2,10},{3,10},{4,10},{5,10},{6,10},{7,10},{8,10},{9,10},{10,10},
+			},
+		},
+		TilePack{ //grama para terra
+			image: ebiten.NewImageFromImage(
+				tilesImage.SubImage(resumeRect(2, 0))),
+			tilemap: [][2]int{
+				{11,10},
+			},
+		},
+		TilePack{ //terra para grama
+			image: ebiten.NewImageFromImage(
+				tilesImage.SubImage(image.Rect(16*(7), 0, 16*(7+1), 16))),
+			tilemap: [][2]int{
+				{0,10},//{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},
+			},
+		},
+		TilePack{
+			image: ebiten.NewImageFromImage(
+				tilesImage.SubImage(image.Rect(16*(7), 16*(1), 16*(7+1), 16*2))),
+			tilemap: [][2]int{
+				{0,11},{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},{11,11},
+			},
 		},
 	}
 
-	tiles = []*TilePack{&grassPack, &dirtPack}
+	/* tilesFrame = [10][7]*TilePack{
+		{&dirtPack, &grassPack},
+	} */
 
 	logicTicker = time.NewTicker(time.Second/60)
 	defer logicTicker.Stop()
