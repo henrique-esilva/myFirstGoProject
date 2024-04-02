@@ -4,9 +4,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	//"encoding/json"
 	"image"
 	"time"
 	"log"
+	"fmt"
 )
 
 const (
@@ -26,14 +28,22 @@ var (
 	scout Character
 	king Character
 	snake Character
-	tiles [10][7] TilePack
-	//tilesFrame [10][7] *TilePack
+	//tiles [16][7] *ebiten.Image
+	tiles [137] *ebiten.Image
+	tilemap []int
+	mapWidth int
+	mapHeight int
 	characters[] *Character
 )
 
-type TilePack struct {
-	image *ebiten.Image
-	tilemap [][2]int
+type Tilemap struct {
+	layers []struct {
+		data []int `json:"data"`
+	} `json:"layers"`
+}
+
+type Tilemap2 struct {
+	data []int `json:"data"`
 }
 
 type Character struct {
@@ -169,14 +179,30 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
     // Desenha a imagem completa na tela
-	for _, j := range tiles{for _, i := range j{
-		for _, pos := range i.tilemap {
+	//for _, j := range tilemap.layers{ for index, i := range j.data{
+	/*for y, i := range tilemap{
+		for x, j := range i{
+			if j != 0 {
+				ind := j-1
+				pos := [2]int{x, y}
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
+				op.GeoM.Scale(scale, scale)
+				screen.DrawImage(tiles[ind], op)
+			}
+		}
+	}*/
+
+	for ind, imgind := range tilemap{
+		if imgind != 0 {
+			corr := imgind-1
+			pos := [2]int{ind%20, ind/20}
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(pos[0]*16), float64(pos[1]*16))
 			op.GeoM.Scale(scale, scale)
-			screen.DrawImage(i.image, op)
+			screen.DrawImage(tiles[corr], op)
 		}
-	}}
+	}
 
 	for _, currentCharacter := range characters {
 		options := &ebiten.DrawImageOptions{}
@@ -199,7 +225,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func resumeRect (x, y int) image.Rectangle {
-	x, y = 16*(7+x), 16*(y)
+	x, y = 16*(x), 16*(y)
 	a := x+16
 	b := y+16
 	return image.Rect(x, y, a, b)
@@ -227,7 +253,7 @@ func main() {
 		index: 0,
 		invert: -1,
 		indexRange: [2]int{0, 3},
-		position: [2]int{7, 6},
+		position: [2]int{6, 7},
 	}
 	
 	snake = Character{
@@ -270,57 +296,92 @@ func main() {
 	tilesImage, _, err = ebitenutil.NewImageFromFile("../../assets/image/sheet.png")
 	rect = image.Rect(16*8, 0, 16*9, 16)
 
-	tiles = [10][7]TilePack{}
-
-	for x:=0; x<10; x++{
-		for y:=0; y<7; y++{
-			tiles[x][y] = TilePack{
-				image:ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y))),
-			}
+	// tiles com 136 de comprimento
+	/*for x:=0;x<16;x++{
+		for y:=0;y<7;y++{
+			tiles[x][y]=ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y)))
+		}
+	}*/
+	for x := 0; x < 17; x++ {
+		for y:=0;y<8;y++{
+			tiles[y*17+x]=ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y)))
 		}
 	}
+	fmt.Println("%+v\n", tiles)
 
-	tiles[4][1].tilemap = [][2]int{{1,11},{2,11},{3,11},{4,11}}
-	tiles[0][0].tilemap = [][2]int{{2,10}}
-	tiles[1][0].tilemap = [][2]int{{3,10},{4,10},{5,10}}
-	tiles[3][0].tilemap = [][2]int{{0,10},{4,8}}
-	tiles[4][0].tilemap = [][2]int{{1,10},{7,10}}
-	tiles[2][0].tilemap = [][2]int{{6,10}}
-	tiles[3][1].tilemap = [][2]int{{4,9},{0,11}}
+	tilemap=[]int{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 50, 51, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 49, 50, 0, 0, 28, 25, 30, 0, 0, 0, 0, 0, 0, 0,
+	0, 11, 12, 13, 0, 11, 12, 12, 13, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0,
+	0, 28, 29, 30, 0, 28, 29, 25, 30, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0}
+	/*tilemap=[][]int{
+	{12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 25, 30, 0, 0, 0, 0, 0, 0, 0},
+	{0, 11, 12, 13, 0, 11, 12, 12, 13, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0},
+	{0, 28, 29, 30, 0, 28, 29, 25, 30, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0},
+	}*/
 
-	/*	TilePack{
-			image: ebiten.NewImageFromImage(
-				tilesImage.SubImage(resumeRect(1, 0))),
-			tilemap: [][2]int{
-				{1,10},{2,10},{3,10},{4,10},{5,10},{6,10},{7,10},{8,10},{9,10},{10,10},
-			},
-		},
-		TilePack{ //grama para terra
-			image: ebiten.NewImageFromImage(
-				tilesImage.SubImage(resumeRect(2, 0))),
-			tilemap: [][2]int{
-				{11,10},
-			},
-		},
-		TilePack{ //terra para grama
-			image: ebiten.NewImageFromImage(
-				tilesImage.SubImage(image.Rect(16*(7), 0, 16*(7+1), 16))),
-			tilemap: [][2]int{
-				{0,10},//{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},
-			},
-		},
-		TilePack{
-			image: ebiten.NewImageFromImage(
-				tilesImage.SubImage(image.Rect(16*(7), 16*(1), 16*(7+1), 16*2))),
-			tilemap: [][2]int{
-				{0,11},{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{8,11},{9,11},{10,11},{11,11},
-			},
-		},
-	}
+	/*"data":[
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 50, 51, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 49, 50, 0, 0, 28, 25, 30, 0, 0, 0, 0, 0, 0, 0,
+	0, 11, 12, 13, 0, 11, 12, 12, 13, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0,
+	0, 28, 29, 30, 0, 28, 29, 25, 30, 0, 28, 29, 30, 0, 0, 0, 0, 0, 0, 0]
+	*/
+	// index 11 at 170th position
+	// 10, 8
 
-	/* tilesFrame = [10][7]*TilePack{
-		{&dirtPack, &grassPack},
-	} */
+	//var tilemap Tilemap2
+	/*err = json.Unmarshal([]byte(myJson), &tilemap)
+    if err != nil {
+        fmt.Println("Erro ao decodificar JSON:", err)
+        return
+    }*/
+
+	fmt.Printf("%+v\n", tilemap)
+
+	// tiles = [10][7]TilePack{}
+
+	// for x:=0; x<10; x++{
+	// 	for y:=0; y<7; y++{
+	// 		tiles[x][y] = TilePack{
+	// 			image:ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y))),
+	// 		}
+	// 	}
+	// }
+	
+	// tiles[4][1].tilemap = [][2]int{{1,11},{2,11},{3,11},{4,11},{5,11},{6,11},{7,11},{5,9},{6,9}}
+	// tiles[0][0].tilemap = [][2]int{{2,10}}
+	// tiles[1][0].tilemap = [][2]int{{3,10},{4,10},{5,10}}
+	// tiles[3][0].tilemap = [][2]int{{0,10},{4,8}}
+	// tiles[5][1].tilemap = [][2]int{{7,9}}
+	// tiles[5][0].tilemap = [][2]int{{7,8}}
+	// tiles[4][0].tilemap = [][2]int{{1,10},{7,10},{5,8},{6,8}}
+	// tiles[2][0].tilemap = [][2]int{{6,10}}
+	// tiles[3][1].tilemap = [][2]int{{4,9},{0,11}}
 
 	logicTicker = time.NewTicker(time.Second/60)
 	defer logicTicker.Stop()
