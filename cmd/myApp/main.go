@@ -30,7 +30,7 @@ var (
 	scout Character
 	king Character
 	snake Character
-	tiles [137] *ebiten.Image
+	tiles [137*2] *ebiten.Image
 	colisionTerrain [20][13]int
 	tilemap Tilemap
 	mapWidth int
@@ -116,12 +116,16 @@ func (g *Game) Update() error {
 				scout.position[0]++
 			}
 			for _, currentCharacter := range characters {
+				if currentCharacter.position[0] < 0{currentCharacter.position[0] = 0}
+				if currentCharacter.position[0] > limitx{currentCharacter.position[0] = limitx}
+				if currentCharacter.position[1] < 1{currentCharacter.position[1] = 1}
+				if currentCharacter.position[1] > limity{currentCharacter.position[1] = limity}
+
 				if currentCharacter.jump > 0 {
 					currentCharacter.position[1]--
 					currentCharacter.jump--
 				} else {
 					if currentCharacter.position[1] <= limity {
-						fmt.Println(colisionTerrain[scout.position[0]][scout.position[1]])
 						currentCharacter.position[1]++
 						if colisionTerrain[currentCharacter.position[0]][currentCharacter.position[1]] == 1 || currentCharacter.position[1] > limity {
 							currentCharacter.position[1]--
@@ -131,14 +135,6 @@ func (g *Game) Update() error {
 				}
 			}
 		default:
-		}
-
-		fmt.Println(scout.position[1])
-		for _, currentCharacter := range characters {
-			if currentCharacter.position[0] < 0{currentCharacter.position[0] = 0}
-			if currentCharacter.position[0] > limitx{currentCharacter.position[0] = limitx}
-			if currentCharacter.position[1] < 1{currentCharacter.position[1] = 1}
-			if currentCharacter.position[1] > limity{currentCharacter.position[1] = limity}
 		}
 
 		x0, y0 = scout.index*32, 0
@@ -359,6 +355,14 @@ func main() {
 		}
 	}
 
+	tilesImage, _, err = ebitenutil.NewImageFromFile("../../assets/image/sheet2.png")
+	for x := 0; x < 17; x++ {
+		for y:=0;y<8;y++{
+			tiles[y*17+x+137]=ebiten.NewImageFromImage(tilesImage.SubImage(resumeRect(x, y)))
+		}
+	}
+	//rect = image.Rect(16*8, 0, 16*9, 16)
+
 	// import game map from archives
 	myJson, err := ioutil.ReadFile("../../map/meuMapa.json")
 	if err != nil {
@@ -406,6 +410,26 @@ func main() {
 	colisionTerrain[11][ 8] = 1
 	colisionTerrain[12][ 8] = 1
 
+	colisionTerrain[16][ 8] = 1
+	colisionTerrain[17][ 8] = 1
+	colisionTerrain[18][ 8] = 1
+	colisionTerrain[19][ 8] = 1
+
+	colisionTerrain[16][ 9] = 1
+	colisionTerrain[17][ 9] = 1
+	colisionTerrain[18][ 9] = 1
+	colisionTerrain[19][ 9] = 1
+
+	colisionTerrain[16][10] = 1
+	colisionTerrain[17][10] = 1
+	colisionTerrain[18][10] = 1
+	colisionTerrain[19][10] = 1
+
+	colisionTerrain[16][11] = 1
+	colisionTerrain[17][11] = 1
+	colisionTerrain[18][11] = 1
+	colisionTerrain[19][11] = 1
+
 	// tiles = [10][7]TilePack{}
 
 	// for x:=0; x<10; x++{
@@ -422,7 +446,7 @@ func main() {
 	defer fallTicker.Stop()
 	frameTicker = time.NewTicker(time.Second/4)
 	defer frameTicker.Stop()
-	animTicker = time.NewTicker(time.Second /8)
+	animTicker = time.NewTicker(time.Second /2)
 	defer animTicker.Stop()
 
     game := &Game{}
